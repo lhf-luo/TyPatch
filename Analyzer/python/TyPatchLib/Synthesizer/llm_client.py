@@ -867,3 +867,107 @@ class OpenAILLM:
 
     def complete_json(self, messages: List[Message], schema: Dict[str, Any]) -> Any:
         return self._complete_json(messages, schema)
+
+
+class DeepSeekLLM(OpenAILLM):
+    """Use the OpenAI-compatible client with DeepSeek defaults."""
+
+    @classmethod
+    def from_env(cls) -> "DeepSeekLLM":
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise LLMError("DEEPSEEK_API_KEY is required")
+        return cls(
+            base_url=os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+            api_key=api_key,
+            model=os.environ.get("DEEPSEEK_MODEL", "deepseek-flash"),
+            temperature=float(os.environ.get("DEEPSEEK_TEMPERATURE", "0")),
+            seed=None,
+            timeout=float(os.environ.get("DEEPSEEK_TIMEOUT_SEC", "120")),
+            max_retries=int(os.environ.get("DEEPSEEK_MAX_RETRIES", "2")),
+            retry_backoff=float(os.environ.get("DEEPSEEK_RETRY_BACKOFF_SEC", "2")),
+            reasoning_effort=os.environ.get("DEEPSEEK_REASONING_EFFORT") or None,
+            api_style=os.environ.get("DEEPSEEK_API_STYLE", "chat"),
+            stream=os.environ.get("DEEPSEEK_STREAM", "").strip().lower()
+            in {"1", "true", "yes"},
+        )
+
+    @classmethod
+    def from_env(
+        cls,
+        *,
+        reasoning_effort: Optional[str] = None,
+        api_style: Optional[str] = None,
+    ) -> "DeepSeekLLM":
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise LLMError("DEEPSEEK_API_KEY is required")
+        return cls(
+            timeout=float(os.environ.get("DEEPSEEK_TIMEOUT_SEC", "120")),
+            max_retries=int(os.environ.get("DEEPSEEK_MAX_RETRIES", "2")),
+            retry_backoff=float(os.environ.get("DEEPSEEK_RETRY_BACKOFF_SEC", "2")),
+            reasoning_effort=os.environ.get("DEEPSEEK_REASONING_EFFORT") or None,
+            api_style=os.environ.get("DEEPSEEK_API_STYLE", "chat"),
+            reasoning_effort=(
+                reasoning_effort or os.environ.get("DEEPSEEK_REASONING_EFFORT") or None
+            ),
+            api_style=api_style or os.environ.get("DEEPSEEK_API_STYLE", "chat"),
+            stream=os.environ.get("DEEPSEEK_STREAM", "").strip().lower() in {"1", "true", "yes"},
+        )
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Try DeepSeek text and JSON completion."
+    )
+    parser.add_argument(
+        "--reasoning-effort",
+        choices=("low", "high", "max"),
+        help="Override DEEPSEEK_REASONING_EFFORT (otherwise use the environment/default).",
+    )
+    parser.add_argument(
+        "--api-style",
+        choices=("chat", "responses"),
+        help="Override DEEPSEEK_API_STYLE (otherwise use the environment/chat).",
+    )
+    args = parser.parse_args()
+
+    llm = DeepSeekLLM.from_env(
+        reasoning_effort=args.reasoning_effort,
+        api_style=args.api_style,
+    )
+    print(
+        "model=", os.environ.get("DEEPSEEK_MODEL", "deepseek-flash"),
+        "api_style=", args.api_style or os.environ.get("DEEPSEEK_API_STYLE", "chat"),
+        "reasoning_effort=",
+        args.reasoning_effort
+        or os.environ.get("DEEPSEEK_REASONING_EFFORT")
+        or "provider default",
+    )
+
+    question = "17 × 23 等于多少？请简要说明计算过程。"
+    messages = [{"role": "user", "content": question}]
+
+    started = time.perf_counter()
+    text_result = llm.complete_text(messages)
+    print(f"\ncomplete_text ({time.perf_counter() - started:.2f}s):\n{text_result}")
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "integer"},
+            "explanation": {"type": "string"},
+        },
+        "required": ["answer", "explanation"],
+        "additionalProperties": False,
+    }
+    started = time.perf_counter()
+    json_result = llm.complete_json(messages, schema)
+    print(
+        f"\ncomplete_json ({time.perf_counter() - started:.2f}s):\n"
+        + json.dumps(json_result, ensure_ascii=False, indent=2)
+    )
+    print("\nusage:", json.dumps(get_usage_stats(), ensure_ascii=False))
+    
+ 

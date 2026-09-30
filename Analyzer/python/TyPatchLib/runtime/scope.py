@@ -118,6 +118,7 @@ _SCOPE_SCHEMA = {
 def _load_scope_llm():
     from TyPatchLib.Synthesizer.llm_client import (
         AnthropicMessagesLLM,
+        DeepSeekLLM,
         OpenAILLM,
     )
 
@@ -126,7 +127,9 @@ def _load_scope_llm():
         return AnthropicMessagesLLM.from_env()
     if provider == "openai":
         return OpenAILLM.from_env()
-    raise ValueError("TYPATCH_LLM_PROVIDER must be 'openai' or 'anthropic'")
+    if provider == "deepseek":
+        return DeepSeekLLM.from_env()
+    raise ValueError("TYPATCH_LLM_PROVIDER must be 'openai', 'anthropic', or 'deepseek'")
 
 
 def _module_dirs(target_files: list[str]) -> list[str]:

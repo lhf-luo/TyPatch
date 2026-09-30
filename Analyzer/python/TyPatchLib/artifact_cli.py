@@ -73,9 +73,9 @@ def default_typestate_bin() -> Path:
 
 def resolve_scan_paths(args: argparse.Namespace) -> None:
     args.data_root = require_dir(
-        env_path("TYPATCH_DATA", "/artifact/data"), "artifact data directory"
+        env_path("TYPATCH_DATA", str(REPO_ROOT / "data")), "artifact data directory"
     )
-    args.results_root = env_path("TYPATCH_RESULTS", "/artifact/results").resolve()
+    args.results_root = env_path("TYPATCH_RESULTS", str(REPO_ROOT / "result")).resolve()
     args.results_root.mkdir(parents=True, exist_ok=True)
     args.compile_db = require_file(default_compile_db(args.data_root), "compile database")
     args.kernel_root = require_dir(default_kernel_root(args.data_root), "Linux v6.16 source tree")

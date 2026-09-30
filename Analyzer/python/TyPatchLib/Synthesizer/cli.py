@@ -16,6 +16,7 @@ from .few_shot_examples import (
 from .ir_schema import IR
 from .llm_client import (
     AnthropicMessagesLLM,
+    DeepSeekLLM,
     LLMBase,
     OpenAILLM,
     get_provider_receipt_count,
@@ -659,9 +660,11 @@ def synthesize(argv: Optional[list] = None) -> int:
         llm = AnthropicMessagesLLM.from_env()
     elif llm_provider == "openai":
         llm = OpenAILLM.from_env()
+    elif llm_provider == "deepseek":
+        llm = DeepSeekLLM.from_env()
     else:
         parser.error(
-            "TYPATCH_LLM_PROVIDER must be 'openai' or 'anthropic'"
+            "TYPATCH_LLM_PROVIDER must be 'openai', 'anthropic', or 'deepseek'"
         )
     # Fall back to KERNEL_ROOT so direct synthesis runs
     # launched without --kernel-source still get API-definition grounding.

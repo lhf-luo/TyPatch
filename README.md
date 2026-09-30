@@ -14,20 +14,18 @@
 
 ## Quick start
 
-Install the pinned Python dependencies, point `TYPATCH_DATA` at the runtime
-data bundle, and run one of the paper rule pools:
+Install the pinned Python dependencies, place the runtime data bundle under
+`data/` in the repository root, and run one of the paper rule pools:
 
 ```bash
 python3 -m pip install -r docker/requirements.txt
 
-export TYPATCH_DATA=/path/to/artifact-data
-export TYPATCH_RESULTS="$PWD/artifact-results"
-
 ./artifact evaluate --pool gpt-5.5
 ```
 
-`TYPATCH_DATA` defaults to `/artifact/data` and `TYPATCH_RESULTS` defaults to
-`/artifact/results`; setting both explicitly is recommended for local runs.
+`TYPATCH_DATA` defaults to `<repository>/data` and `TYPATCH_RESULTS` defaults
+to `<repository>/result`. Set either environment variable to override its
+default.
 Each run creates a timestamped directory below the results root unless
 `--run-name` is provided.
 
@@ -76,7 +74,7 @@ scope, and then runs the analyzer. It is separate from paper evaluation and
 requires credentials for the selected LLM provider in the environment.
 
 ```bash
-export TYPATCH_LLM_PROVIDER=openai   # or anthropic
+export TYPATCH_LLM_PROVIDER=openai   # or anthropic or deepseek
 
 # Quick test on one of the bundled RQ1 commits.
 ./artifact from-scratch --rq1 --limit 1
@@ -84,6 +82,8 @@ export TYPATCH_LLM_PROVIDER=openai   # or anthropic
 
 For `openai`, provide `OPENAI_API_KEY`; for `anthropic`, provide
 `ANTHROPIC_API_KEY` (or `ANTHROPIC_AUTH_TOKEN`) and `ANTHROPIC_BASE_URL`.
+For `deepseek`, provide `DEEPSEEK_API_KEY`; the default model is
+`deepseek-flash` at `https://api.deepseek.com`.
 The corresponding `*_MODEL` and `*_BASE_URL` variables can be used to select
 an endpoint or model.
 

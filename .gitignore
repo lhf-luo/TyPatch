@@ -26,3 +26,5 @@ WorkDir/*
 
 artifact-data/*
 artifact-results/
+data/
+result/
