@@ -359,7 +359,7 @@ def _write_prompt_audit(
         role = message.get("role", "unknown")
         content = message.get("content", "")
         parts.extend([f"# {role}", "", content, ""])
-    path.write_text("\n".join(parts))
+    path.write_text("\n".join(parts), encoding="utf-8")
     return str(path)
 
 
@@ -394,12 +394,12 @@ def synthesize_commit(
 
     # 2. Build the grounded generation prompt
     try:
-        system_prompt = _RULE_PROMPT_PATH.read_text()
+        system_prompt = _RULE_PROMPT_PATH.read_text(encoding="utf-8")
         few_shot_examples = select_few_shot_examples(
             commit_message=patch.message,
             patch_diff=patch.diff,
             max_examples=2,
-        )
+        )#return some example
         source_context_root = (
             kernel_root
             if kernel_root and kernel_root.is_dir()
@@ -437,7 +437,7 @@ def synthesize_commit(
         messages=messages,
     )
     report.metadata["prompt_path"] = prompt_path
-    prompt_text = Path(prompt_path).read_text()
+    prompt_text = Path(prompt_path).read_text(encoding="utf-8")
     report.metadata["prompt_sha256"] = hashlib.sha256(
         prompt_text.encode("utf-8")
     ).hexdigest()
@@ -655,7 +655,7 @@ def synthesize(argv: Optional[list] = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    llm_provider = os.environ.get("TYPATCH_LLM_PROVIDER", "openai").strip().lower()
+    llm_provider = os.environ.get("TYPATCH_LLM_PROVIDER", "deepseek").strip().lower()
     if llm_provider == "anthropic":
         llm = AnthropicMessagesLLM.from_env()
     elif llm_provider == "openai":
@@ -723,7 +723,6 @@ def synthesize(argv: Optional[list] = None) -> int:
 
 
 def main(argv: Optional[list] = None) -> int:
-    breakpoint()
     args = list(sys.argv[1:] if argv is None else argv)
     if args and args[0] == "synthesize":
         return synthesize(args[1:])

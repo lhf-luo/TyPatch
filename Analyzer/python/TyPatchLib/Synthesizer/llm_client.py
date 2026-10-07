@@ -903,11 +903,14 @@ class DeepSeekLLM(OpenAILLM):
         if not api_key:
             raise LLMError("DEEPSEEK_API_KEY is required")
         return cls(
+            base_url=os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com"),
+            api_key=api_key,
+            model=os.environ.get("DEEPSEEK_MODEL", "deepseek-flash"),
+            temperature=float(os.environ.get("DEEPSEEK_TEMPERATURE", "0")),
+            seed=None,
             timeout=float(os.environ.get("DEEPSEEK_TIMEOUT_SEC", "120")),
             max_retries=int(os.environ.get("DEEPSEEK_MAX_RETRIES", "2")),
             retry_backoff=float(os.environ.get("DEEPSEEK_RETRY_BACKOFF_SEC", "2")),
-            reasoning_effort=os.environ.get("DEEPSEEK_REASONING_EFFORT") or None,
-            api_style=os.environ.get("DEEPSEEK_API_STYLE", "chat"),
             reasoning_effort=(
                 reasoning_effort or os.environ.get("DEEPSEEK_REASONING_EFFORT") or None
             ),

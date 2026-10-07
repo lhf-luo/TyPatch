@@ -283,30 +283,19 @@ def run_command(
     with log_path.open("w") as log:
         log.write("[runner] command: " + shlex.join(command) + "\n")
         log.flush()
-        proc = subprocess.Popen(
-            command,
-            cwd=str(cwd),
-            env=env,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            text=True,
-            start_new_session=True,
-        )
         try:
-            returncode = proc.wait(timeout=timeout_sec)
-            return "finished", returncode, time.monotonic() - start
+            completed = subprocess.run(
+                command,
+                cwd=str(cwd),
+                env=env,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                text=True,
+                start_new_session=True,
+            )
+            return "finished", completed.returncode, time.monotonic() - start
         except subprocess.TimeoutExpired:
             log.write(f"\n[runner] timeout after {timeout_sec}s; terminating process group\n")
-            log.flush()
-            try:
-                os.killpg(proc.pid, signal.SIGTERM)
-                proc.wait(timeout=20)
-            except Exception:  # noqa: BLE001
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                proc.wait()
             return "timeout", None, time.monotonic() - start
 
 

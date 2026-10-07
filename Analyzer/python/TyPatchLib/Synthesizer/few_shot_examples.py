@@ -21,18 +21,16 @@ DEFAULT_MANIFEST = FEW_SHOT_ROOT / "manifest.json"
 
 
 def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    # Git may check out these text fixtures with CRLF on Windows, while the
+    # audited hashes were recorded from the LF bytes stored in the repository.
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def load_few_shot_manifest(path: Path | None = None) -> dict[str, Any]:
     """Load and validate the machine-readable few-shot manifest."""
 
     manifest_path = path or DEFAULT_MANIFEST
-    payload = json.loads(manifest_path.read_text())
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != 1:
         raise ValueError(
             f"{manifest_path}: unsupported schema_version "
@@ -116,7 +114,7 @@ def _contains_selector(text: str, selector: str) -> bool:
     )
     return re.search(pattern, text) is not None
 
-
+#选择diff段落
 def _selection_text(commit_message: str, patch_diff: str) -> str:
     """Use the commit message and changed lines, excluding diff context.
 
@@ -149,7 +147,7 @@ def _match_score(example: dict[str, Any], text: str) -> int:
             score += 3
     return score
 
-
+#消息+diff,输出合适的example
 def select_few_shot_examples(
     *,
     commit_message: str = "",
@@ -169,9 +167,9 @@ def select_few_shot_examples(
     if max_examples == 0:
         return []
 
-    manifest = load_few_shot_manifest(manifest_path)
+    manifest = load_few_shot_manifest(manifest_path)#获取例子
     text = _selection_text(commit_message, patch_diff)
-    scored: list[tuple[int, int, str, dict[str, Any]]] = []
+    scored: list[tuple[int, int, str, dict[str, Any]]] = []#存放相似的案例
     for example in manifest["examples"]:
         if example.get("status") != "executable":
             continue
@@ -189,7 +187,7 @@ def select_few_shot_examples(
 
 def _read_relative(root: Path, relative: str) -> str:
     path = root / relative
-    return path.read_text().rstrip()
+    return path.read_text(encoding="utf-8").rstrip()
 
 
 def render_few_shot_examples(

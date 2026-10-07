@@ -413,7 +413,7 @@ def repair_candidate(
             "role": "system",
             "content": "\n\n".join(
                 [
-                    _PROMPT_PATH.read_text(),
+                    _PROMPT_PATH.read_text(encoding="utf-8"),
                     "You are repairing a previous IR candidate. Return only one "
                     "valid JSON object for our IR v0.5. Do not output prose.",
                     "Do not wrap the IR inside keys such as output, result, "

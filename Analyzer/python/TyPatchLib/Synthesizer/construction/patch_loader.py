@@ -14,12 +14,12 @@ _KERNEL_REMOTE_URL = (
 
 @dataclass
 class PatchInfo:
-    commit: str
-    message: str
-    touched_files: List[str]
-    diff: str
-    file_before: Dict[str, str] = field(default_factory=dict)
-    file_after: Dict[str, str] = field(default_factory=dict)
+    commit: str#commit
+    message: str #commit的描述
+    touched_files: List[str]#改变的文件
+    diff: str#具体的改变
+    file_before: Dict[str, str] = field(default_factory=dict)#改变前的文件
+    file_after: Dict[str, str] = field(default_factory=dict)#改变后的文件
 
 
 def _run_git(repo: Path, *args: str) -> str:
@@ -59,12 +59,21 @@ def _ensure_remote(repo: Path, name: str = "origin") -> None:
 def _fetch_commit(repo: Path, sha: str) -> None:
     """Fetch a single commit (and its parent) from the kernel.org remote."""
     _ensure_remote(repo)
-    subprocess.check_call(
-        ["git", "fetch", "--depth=2", "origin", sha],
-        cwd=str(repo),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-    )
+    try:
+        subprocess.run(
+            ["git", "fetch", "--depth=2", "origin", sha],
+            cwd=str(repo),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+            errors="replace",
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or "").strip()
+        raise RuntimeError(
+            f"git fetch failed for {sha} (exit {exc.returncode}): {detail}"
+        ) from exc
 
 
 def load_patch(commit: str, repo: Path) -> PatchInfo:
@@ -82,7 +91,7 @@ def load_patch(commit: str, repo: Path) -> PatchInfo:
 
     message = _run_git(repo, "log", "-1", "--pretty=%B", full_sha)
     diff = _run_git(repo, "show", "--format=", "--no-color", "-U20", full_sha)
-
+    #改写的行
     touched = [
         line
         for line in _run_git(repo, "show", "--name-only", "--format=", full_sha).splitlines()
