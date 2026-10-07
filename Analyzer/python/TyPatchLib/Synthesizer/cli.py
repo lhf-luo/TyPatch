@@ -723,6 +723,7 @@ def synthesize(argv: Optional[list] = None) -> int:
 
 
 def main(argv: Optional[list] = None) -> int:
+    breakpoint()
     args = list(sys.argv[1:] if argv is None else argv)
     if args and args[0] == "synthesize":
         return synthesize(args[1:])

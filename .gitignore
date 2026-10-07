@@ -19,7 +19,11 @@ Results/
 *.sqlite
 *.sqlite3
 *.ll
-
+_ppt_sources.conversion_profile.json
+_ppt_sources.md
+TyPatch Transforming Patches into Typestate Rules for Kernel Bug Detection [preprint].pdf
+typatch_report_20261002/*
+mineru/*
 WorkDir/*
 !WorkDir/config/
 !WorkDir/config/**
@@ -28,3 +32,4 @@ artifact-data/*
 artifact-results/
 data/
 result/
+.vscode/*
